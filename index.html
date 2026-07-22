@@ -1,57 +1,18 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0b1220" />
-    <title>SHAZO | شازو</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <div id="intro" class="intro" aria-label="شاشة البداية">
-      <div class="particles"></div>
-      <button class="skip" id="skipIntro">تخطي</button>
-      <div class="intro-center">
-        <button id="capsule" class="capsule" aria-label="ابدأ"><i></i><b>ϟ</b><em></em></button>
-        <p id="introText">اضغط الكبسولة للبدء</p>
-        <div id="introLogo" class="intro-logo">sha<span>ϟ</span>o</div>
-      </div>
-    </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>shazo — Pharmacology Reference</title>
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+  <div class="app">
+    <nav class="sidebar" id="sidebar" aria-label="Body systems"></nav>
+    <main class="content" id="content"></main>
+  </div>
 
-    <main id="app" class="app hidden">
-      <header class="topbar">
-        <button class="icon-btn mobile-menu" id="menuBtn">☰</button>
-        <a class="brand" href="#home"><span class="brand-capsule"><i></i><b>ϟ</b></span><strong>SHAZO</strong><small>شازو</small></a>
-        <div class="top-actions">
-          <button class="icon-btn" id="themeBtn" title="تبديل الوضع">☾</button>
-          <button class="icon-btn badge-wrap" data-page="notifications" title="الإشعارات">♧<span>3</span></button>
-          <button class="avatar" data-page="account">م</button>
-        </div>
-      </header>
-
-      <aside class="sidebar" id="sidebar">
-        <nav id="nav">
-          <button class="active" data-page="home"><span>⌂</span> الرئيسية</button>
-          <button data-page="drugs"><span>✚</span> الأدوية</button>
-          <button data-page="prescriptions"><span>▤</span> وصفاتي</button>
-          <button data-page="articles"><span>▱</span> معلومات صيدلانية</button>
-          <button data-page="store"><span>♢</span> المتجر <b id="cartCount">0</b></button>
-          <button data-page="favorites"><span>♡</span> المفضلة</button>
-          <button data-page="notifications"><span>♧</span> الإشعارات</button>
-        </nav>
-        <div class="side-bottom">
-          <button data-page="account"><span>⚙</span> الإعدادات والحساب</button>
-          <button data-page="admin"><span>▣</span> لوحة الإدارة</button>
-        </div>
-      </aside>
-
-      <section class="content" id="content"></section>
-      <nav class="bottom-nav"><button class="active" data-page="home">⌂<small>الرئيسية</small></button><button data-page="drugs">✚<small>الأدوية</small></button><button data-page="store">♢<small>المتجر</small></button><button data-page="favorites">♡<small>المفضلة</small></button><button data-page="account">⚙<small>حسابي</small></button></nav>
-    </main>
-    <div id="toast" class="toast"></div>
-    <script src="app.js"></script>
-  </body>
+  <script src="assets/data.js"></script>
+  <script src="assets/app.js"></script>
+</body>
 </html>

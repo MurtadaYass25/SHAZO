@@ -1,26 +1,159 @@
-const defaults={drugs:[{id:1,name:'باراسيتامول',scientific:'Paracetamol',form:'أقراص',category:'مسكنات',color:'💊'},{id:2,name:'أموكسيسيلين',scientific:'Amoxicillin',form:'كبسولات',category:'مضادات حيوية',color:'🧪'},{id:3,name:'أوميبرازول',scientific:'Omeprazole',form:'كبسولات',category:'الجهاز الهضمي',color:'◒'},{id:4,name:'لوراتادين',scientific:'Loratadine',form:'أقراص',category:'الحساسية',color:'✦'},{id:5,name:'فيتامين د3',scientific:'Cholecalciferol',form:'قطرات',category:'فيتامينات',color:'☀'}],products:[{id:1,name:'جهاز قياس الضغط الذكي',price:38000,icon:'⌁',type:'أجهزة'},{id:2,name:'واقي شمس طبي SPF 50',price:17500,icon:'☼',type:'عناية بالبشرة'},{id:3,name:'فيتامينات متعددة',price:12000,icon:'✚',type:'مكملات'}],articles:[{id:1,title:'كيف تستخدم المضاد الحيوي بطريقة صحيحة؟',category:'توعية دوائية',icon:'✚',text:'إرشادات مختصرة وآمنة للاستخدام المسؤول للمضادات الحيوية.'},{id:2,title:'دليل حفظ الأدوية في المنزل',category:'نصائح صحية',icon:'⌂',text:'خطوات بسيطة لحفظ الدواء بعيداً عن الحرارة والرطوبة.'},{id:3,title:'متى تحتاج إلى فيتامين د؟',category:'فيتامينات',icon:'☀',text:'تعرف على أهمية الفحص والاستشارة قبل استخدام المكملات.'}]};
-const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
-let state={page:'home',drugs:[],products:[],articles:[],fav:[],cart:[],prescriptions:[],accent:'#2d7eff',dark:false,adminTab:'drugs'};
-function load(){for(const k of ['drugs','products','articles'])state[k]=JSON.parse(localStorage.getItem('shazo_'+k)||'null')||structuredClone(defaults[k]);for(const k of ['fav','cart','prescriptions'])state[k]=JSON.parse(localStorage.getItem('shazo_'+k)||'[]');state.accent=localStorage.getItem('shazo_accent')||'#2d7eff';state.dark=localStorage.getItem('shazo_dark')==='1';applyLook()}
-function save(k){localStorage.setItem('shazo_'+k,JSON.stringify(state[k]))}function applyLook(){document.documentElement.style.setProperty('--accent',state.accent);let rgb=state.accent.match(/\w\w/g).map(x=>parseInt(x,16)).join(',');document.documentElement.style.setProperty('--accent-rgb',rgb);document.body.classList.toggle('dark',state.dark);$('#themeBtn').textContent=state.dark?'☀':'☾'}
-function money(n){return new Intl.NumberFormat('ar-IQ').format(n)+' د.ع'}function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2300)}
-function goto(page){state.page=page;$('#sidebar').classList.remove('open');render();window.scrollTo({top:0,behavior:'smooth'})}function nav(){ $$('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===state.page));$('#cartCount').textContent=state.cart.reduce((n,x)=>n+x.qty,0)}
-function favBtn(kind,id){return `<button class="fav ${state.fav.some(x=>x.kind===kind&&x.id===id)?'on':''}" onclick="toggleFav('${kind}',${id})">♥</button>`}function toggleFav(kind,id){let i=state.fav.findIndex(x=>x.kind===kind&&x.id===id);if(i>=0)state.fav.splice(i,1);else state.fav.push({kind,id});save('fav');render();toast(i>=0?'تمت الإزالة من المفضلة':'تمت الإضافة إلى المفضلة')}
-function drugCard(d){return `<article class="card drug-card">${favBtn('drug',d.id)}<div class="drug-icon">${d.color||'💊'}</div><h4>${d.name}</h4><p>${d.scientific||''}</p><span class="tag">${d.category||'عام'}</span><button class="link" onclick="drugDetails(${d.id})" style="float:left;margin-top:13px">التفاصيل ←</button></article>`}
-function home(){return `<div class="page"><div class="page-head"><div><span class="eyebrow">أهلاً بك في شازو</span><h1>صحتك، بذكاء أكثر.</h1><p>كل ما تحتاجه لصحة أفضل في مكان واحد.</p></div><div class="search">⌕<input placeholder="ابحث عن دواء أو معلومة..." oninput="quickSearch(this.value)"></div></div><section class="hero"><div><span class="eyebrow" style="color:#9cc4ff">SHAZO SMART PHARMACY</span><h2>الصيدلية التي تفهم احتياجك.</h2><p>ابحث عن أدويتك، نظّم وصفاتك، وتسوق بكل سهولة من مكان واحد.</p><button class="btn light" onclick="goto('drugs')">استكشف الأدوية</button></div><div class="big-plus">+</div></section><div class="section-title"><h3>وصول سريع</h3></div><div class="quick-grid"><button class="quick" onclick="goto('drugs')"><i>✚</i><strong>البحث عن دواء</strong><small>معلومات موثوقة</small></button><button class="quick" onclick="goto('prescriptions')"><i>▤</i><strong>وصفاتي الطبية</strong><small>${state.prescriptions.length} وصفات محفوظة</small></button><button class="quick" onclick="goto('store')"><i>♢</i><strong>متجر شازو</strong><small>منتجات صحية مختارة</small></button><button class="quick" onclick="goto('articles')"><i>▱</i><strong>معلومات صيدلانية</strong><small>تعلّم وابقَ مطمئناً</small></button></div><div class="section-title"><h3>أدوية تمت مشاهدتها</h3><button class="link" onclick="goto('drugs')">عرض الكل ←</button></div><div class="card-grid">${state.drugs.slice(0,3).map(drugCard).join('')}</div></div>`}
-function drugs(){let cats=['الكل',...new Set(state.drugs.map(x=>x.category))];return `<div class="page"><div class="page-head"><div><span class="eyebrow">قاعدة شازو الدوائية</span><h1>الأدوية</h1><p>معلومات دوائية للتوعية، لا تغني عن استشارة الطبيب أو الصيدلي.</p></div></div><div class="search" style="margin-bottom:14px">⌕<input id="drugSearch" oninput="filterDrugs()" placeholder="اكتب اسم الدواء أو الاسم العلمي..."></div><div class="filters">${cats.map((c,i)=>`<button class="filter ${i===0?'active':''}" onclick="selectFilter(this,'${c}')">${c}</button>`).join('')}</div><div id="drugResults" class="card-grid">${state.drugs.map(drugCard).join('')}</div></div>`}
-function filterDrugs(){let q=$('#drugSearch').value.toLowerCase(),cat=$('.filter.active')?.textContent;let a=state.drugs.filter(d=>(cat==='الكل'||d.category===cat)&&(`${d.name} ${d.scientific}`).toLowerCase().includes(q));$('#drugResults').innerHTML=a.length?a.map(drugCard).join(''):`<div class="empty">لم نجد دواءً مطابقاً للبحث.</div>`}function selectFilter(el,c){$$('.filter').forEach(x=>x.classList.remove('active'));el.classList.add('active');filterDrugs()}
-function drugDetails(id){let d=state.drugs.find(x=>x.id===id);modal(`<h3>${d.name}</h3><p class="eyebrow">${d.scientific}</p><div class="table-card"><p><b>التصنيف:</b> ${d.category}</p><p><b>الشكل الصيدلاني:</b> ${d.form}</p><p><b>الاستخدامات:</b> تُعرض هنا معلومات الاستخدام العامة. راجع الطبيب أو الصيدلي دائماً قبل بدء أو تغيير أي دواء.</p><p><b>تنبيه:</b> لا تستخدم الدواء في حال وجود حساسية أو تداخلات دوائية دون استشارة مختص.</p></div>`)}
-function prescriptions(){return `<div class="page"><div class="page-head"><div><span class="eyebrow">منظم العلاج الشخصي</span><h1>وصفاتي الطبية</h1><p>احفظ وصفاتك محلياً على جهازك لتبقى منظمة.</p></div><button class="btn" onclick="prescriptionForm()">+ إضافة وصفة</button></div>${state.prescriptions.length?state.prescriptions.map((p,i)=>`<div class="prescription"><button class="fav" onclick="deletePrescription(${i})">×</button><h4>${p.title}</h4><p>${p.doctor||'بدون اسم طبيب'} · ${p.date}</p><p>${p.notes||'لا توجد ملاحظات'}</p></div>`).join(''):`<div class="table-card empty">▤<br>لا توجد وصفات محفوظة بعد.<br><button class="btn" style="margin-top:14px" onclick="prescriptionForm()">أضف أول وصفة</button></div>`}</div>`}
-function prescriptionForm(){modal(`<h3>إضافة وصفة جديدة</h3><form onsubmit="savePrescription(event)"><div class="field"><label>عنوان الوصفة</label><input name="title" required placeholder="مثال: علاج الحساسية"></div><div class="field"><label>اسم الطبيب</label><input name="doctor" placeholder="اختياري"></div><div class="field"><label>ملاحظات وجرعات</label><textarea name="notes" rows="3" placeholder="اكتب التفاصيل التي تحتاج حفظها"></textarea></div><button class="btn">حفظ الوصفة</button></form>`) }function savePrescription(e){e.preventDefault();let f=new FormData(e.target);state.prescriptions.unshift({title:f.get('title'),doctor:f.get('doctor'),notes:f.get('notes'),date:new Date().toLocaleDateString('ar-IQ')});save('prescriptions');closeModal();render();toast('تم حفظ الوصفة')}
-function articles(){return `<div class="page"><div class="page-head"><div><span class="eyebrow">تعلم وابقَ مطمئناً</span><h1>معلومات صيدلانية</h1><p>محتوى تثقيفي مبسط من شازو.</p></div></div><div class="card-grid">${state.articles.map(a=>`<article class="card article-card">${favBtn('article',a.id)}<div class="article-art">${a.icon||'▱'}</div><span class="tag">${a.category}</span><h4 style="margin-top:10px">${a.title}</h4><p>${a.text||''}</p><button class="link" onclick="articleDetails(${a.id})" style="margin-top:10px">اقرأ المقال ←</button></article>`).join('')}</div></div>`}function articleDetails(id){let a=state.articles.find(x=>x.id===id);modal(`<h3>${a.title}</h3><p class="eyebrow">${a.category}</p><p style="line-height:2">${a.text||''} هذا نموذج لمقال تثقيفي داخل المنصة. في النسخة النهائية نضيف المحتوى الطبي المراجع كاملاً مع المراجع وتاريخ المراجعة.</p>`) }
-function store(){return `<div class="page"><div class="page-head"><div><span class="eyebrow">منتجات صحية مختارة</span><h1>متجر شازو</h1><p>دفع تجريبي فقط في هذه النسخة.</p></div><button class="btn" onclick="showCart()">السلة (${state.cart.reduce((n,x)=>n+x.qty,0)})</button></div><div class="card-grid">${state.products.map(p=>`<article class="card product-card"><div class="product-icon">${p.icon||'♢'}</div><span class="tag">${p.type||'منتج صحي'}</span><h4>${p.name}</h4><p class="price">${money(p.price)}</p><button class="btn" onclick="addCart(${p.id})">أضف للسلة</button></article>`).join('')}</div></div>`}function addCart(id){let x=state.cart.find(x=>x.id===id);if(x)x.qty++;else state.cart.push({id,qty:1});save('cart');nav();toast('تمت إضافة المنتج للسلة')}function showCart(){let items=state.cart.map(x=>({...state.products.find(p=>p.id===x.id),qty:x.qty}));let body=items.length?items.map(x=>`<div class="list-row"><div class="product-icon">${x.icon}</div><div class="grow"><h4>${x.name}</h4><p>${money(x.price)} × ${x.qty}</p></div><button class="link" onclick="removeCart(${x.id})">إزالة</button></div>`).join('')+`<p><b>المجموع: ${money(items.reduce((n,x)=>n+x.price*x.qty,0))}</b></p><button class="btn" onclick="checkout()">إتمام الطلب التجريبي</button>`:`<div class="empty">السلة فارغة</div>`;modal(`<h3>سلة التسوق</h3>${body}`)}function removeCart(id){state.cart=state.cart.filter(x=>x.id!==id);save('cart');closeModal();showCart();nav()}function checkout(){state.cart=[];save('cart');closeModal();render();toast('تم تسجيل طلبك التجريبي بنجاح')}
-function favorites(){let ds=state.fav.filter(x=>x.kind==='drug').map(x=>state.drugs.find(d=>d.id===x.id)).filter(Boolean),as=state.fav.filter(x=>x.kind==='article').map(x=>state.articles.find(a=>a.id===x.id)).filter(Boolean);return `<div class="page"><div class="page-head"><div><span class="eyebrow">قائمتك الشخصية</span><h1>المفضلة</h1><p>كل ما حفظته لسهولة الرجوع إليه.</p></div></div><div class="tabs"><button class="active" onclick="favTab(this,'fdrugs')">الأدوية (${ds.length})</button><button onclick="favTab(this,'farticles')">المقالات (${as.length})</button></div><div id="fdrugs" class="card-grid">${ds.length?ds.map(drugCard).join(''):`<div class="empty">لا توجد أدوية مفضلة.</div>`}</div><div id="farticles" class="card-grid hidden">${as.length?as.map(a=>`<article class="card article-card">${favBtn('article',a.id)}<div class="article-art">${a.icon}</div><h4>${a.title}</h4><p>${a.text}</p></article>`).join(''):`<div class="empty">لا توجد مقالات مفضلة.</div>`}</div></div>`}function favTab(e,id){$$('.tabs button').forEach(x=>x.classList.remove('active'));e.classList.add('active');$('#fdrugs').classList.toggle('hidden',id!=='fdrugs');$('#farticles').classList.toggle('hidden',id!=='farticles')}
-function notifications(){return `<div class="page"><div class="page-head"><div><span class="eyebrow">آخر المستجدات</span><h1>الإشعارات</h1></div></div><div class="table-card">${['مرحباً بك في شازو — ابدأ باكتشاف الأدوية.','تذكير: راجع وصفاتك الطبية المحفوظة.','منتجات جديدة أصبحت متوفرة في المتجر.'].map((x,i)=>`<div class="list-row"><div class="drug-icon">${i?'♧':'✦'}</div><div class="grow"><h4>${x}</h4><p>منذ ${i+1} ساعات</p></div><span class="pill">جديد</span></div>`).join('')}</div></div>`}
-function account(){let colors=['#2d7eff','#155eef','#00a6a6','#087f5b','#23a559','#4f46e5','#8b5cf6','#e34b87','#e23b4a','#f97316','#bb8412','#64748b'];return `<div class="page"><div class="page-head"><div><span class="eyebrow">مساحتك الشخصية</span><h1>حسابي والإعدادات</h1><p>تُحفظ خياراتك على هذا الجهاز فقط.</p></div></div><div class="settings"><section class="form-card"><h3>المظهر</h3><div class="list-row"><div class="grow"><h4>الوضع الليلي</h4><p>اجعل واجهة شازو مريحة للعين ليلاً</p></div><button class="switch ${state.dark?'on':''}" onclick="toggleDark()"><i></i></button></div><h4>لون التطبيق</h4><p style="color:var(--muted);font-size:11px">اختر اللون الذي يعكس ذوقك، يتغير التطبيق فوراً.</p><div class="color-list">${colors.map(c=>`<button title="${c}" onclick="setAccent('${c}')" class="color-dot ${c===state.accent?'active':''}" style="background:${c}"></button>`).join('')}</div></section><section class="form-card"><h3>ملفك الشخصي</h3><div class="field"><label>الاسم</label><input id="userName" value="${localStorage.getItem('shazo_name')||'مستخدم شازو'}"></div><div class="field"><label>البريد الإلكتروني</label><input id="userEmail" value="${localStorage.getItem('shazo_email')||''}" placeholder="name@example.com"></div><button class="btn" onclick="saveProfile()">حفظ التغييرات</button></section><section class="form-card"><h3>إحصاءات سريعة</h3><div class="list-row"><div class="grow"><h4>العناصر المفضلة</h4></div><b>${state.fav.length}</b></div><div class="list-row"><div class="grow"><h4>الوصفات المحفوظة</h4></div><b>${state.prescriptions.length}</b></div></section><section class="form-card"><h3>البيانات</h3><p style="color:var(--muted);font-size:12px">بإمكانك حذف كل بيانات النسخة التجريبية من هذا المتصفح.</p><button class="btn danger" onclick="resetAll()">استعادة الإعدادات الافتراضية</button></section></div></div>`}function toggleDark(){state.dark=!state.dark;localStorage.setItem('shazo_dark',state.dark?'1':'0');applyLook();render()}function setAccent(c){state.accent=c;localStorage.setItem('shazo_accent',c);applyLook();render()}function saveProfile(){localStorage.setItem('shazo_name',$('#userName').value);localStorage.setItem('shazo_email',$('#userEmail').value);toast('تم حفظ الملف الشخصي')}function resetAll(){if(confirm('هل تريد مسح كل التعديلات المحلية؟')){Object.keys(localStorage).filter(k=>k.startsWith('shazo_')).forEach(k=>localStorage.removeItem(k));load();render();toast('تمت الاستعادة بنجاح')}}
-function admin(){return `<div class="page"><div class="page-head"><div><span class="eyebrow">إدارة محلية — تجريبية</span><h1>لوحة الإدارة</h1><p>كل تعديل يظهر في الموقع فوراً على نفس المتصفح.</p></div><button class="btn danger" onclick="adminReset()">استعادة الافتراضي</button></div><div class="admin-grid"><div class="form-card admin-tabs"><button class="${state.adminTab==='drugs'?'active':''}" onclick="adminTab('drugs')">إدارة الأدوية</button><button class="${state.adminTab==='products'?'active':''}" onclick="adminTab('products')">إدارة المنتجات</button><button class="${state.adminTab==='articles'?'active':''}" onclick="adminTab('articles')">إدارة المقالات</button></div><section class="form-card">${adminContent()}</section></div></div>`}function adminTab(t){state.adminTab=t;render()}function adminContent(){let t=state.adminTab,ar=state[t],label={drugs:'دواء',products:'منتج',articles:'مقال'}[t];return `<div class="section-title" style="margin-top:0"><h3>${label}ات الموقع</h3><button class="btn" onclick="adminForm('${t}')">+ إضافة ${label}</button></div><table class="admin-table"><thead><tr><th>العنوان</th><th>التصنيف</th><th>إجراء</th></tr></thead><tbody>${ar.map(x=>`<tr><td>${x.name||x.title}</td><td>${x.category||x.type||'—'}</td><td><button class="link" onclick="adminForm('${t}',${x.id})">تعديل</button> <button class="link" style="color:#e44560" onclick="adminDelete('${t}',${x.id})">حذف</button></td></tr>`).join('')}</tbody></table>`}function adminForm(t,id){let x=id?state[t].find(x=>x.id===id):{};let fields=t==='drugs'?`<div class="form-row"><div class="field"><label>اسم الدواء</label><input name="name" required value="${x.name||''}"></div><div class="field"><label>الاسم العلمي</label><input name="scientific" value="${x.scientific||''}"></div></div><div class="form-row"><div class="field"><label>التصنيف</label><input name="category" value="${x.category||''}"></div><div class="field"><label>الشكل</label><input name="form" value="${x.form||''}"></div></div>`:t==='products'?`<div class="field"><label>اسم المنتج</label><input name="name" required value="${x.name||''}"></div><div class="form-row"><div class="field"><label>السعر بالدينار</label><input type="number" name="price" value="${x.price||''}"></div><div class="field"><label>التصنيف</label><input name="type" value="${x.type||''}"></div></div>`:`<div class="field"><label>عنوان المقال</label><input name="title" required value="${x.title||''}"></div><div class="field"><label>التصنيف</label><input name="category" value="${x.category||''}"></div><div class="field"><label>الملخص</label><textarea name="text">${x.text||''}</textarea></div>`;modal(`<h3>${id?'تعديل':'إضافة'} عنصر</h3><form onsubmit="saveAdmin(event,'${t}',${id||'null'})">${fields}<button class="btn">حفظ</button></form>`)}function saveAdmin(e,t,id){e.preventDefault();let v=Object.fromEntries(new FormData(e.target));if(t==='products')v.price=+v.price;if(id){let i=state[t].findIndex(x=>x.id===id);state[t][i]={...state[t][i],...v}}else state[t].push({id:Date.now(),icon:t==='articles'?'▱':t==='products'?'♢':undefined,color:t==='drugs'?'💊':undefined,...v});save(t);closeModal();render();toast('تم حفظ التعديل')}function adminDelete(t,id){if(confirm('حذف هذا العنصر؟')){state[t]=state[t].filter(x=>x.id!==id);save(t);render();toast('تم الحذف')}}function adminReset(){if(confirm('إرجاع الأدوية والمنتجات والمقالات للتجريبية؟')){for(let k of ['drugs','products','articles']){state[k]=structuredClone(defaults[k]);save(k)}render();toast('تمت الاستعادة')}}
-function quickSearch(q){if(q.trim().length>1){goto('drugs');setTimeout(()=>{$('#drugSearch').value=q;filterDrugs()},30)}}function modal(html){document.body.insertAdjacentHTML('beforeend',`<div class="modal" id="modal" onclick="if(event.target.id==='modal')closeModal()"><div class="modal-box">${html}<button class="link" style="margin-top:15px" onclick="closeModal()">إغلاق</button></div></div>`)}function closeModal(){$('#modal')?.remove()}
-function render(){nav();let p={home,drugs,prescriptions,articles,store,favorites,notifications,account,admin}[state.page]||home;$('#content').innerHTML=p()}
-$('#nav').onclick=e=>{let b=e.target.closest('[data-page]');if(b)goto(b.dataset.page)};$('.bottom-nav').onclick=e=>{let b=e.target.closest('[data-page]');if(b)goto(b.dataset.page)};$$('.top-actions [data-page]').forEach(b=>b.onclick=()=>goto(b.dataset.page));$('#menuBtn').onclick=()=>$('#sidebar').classList.toggle('open');$('#themeBtn').onclick=toggleDark;
-function intro(){let seen=sessionStorage.getItem('shazo_intro');if(seen){$('#intro').remove();$('#app').classList.remove('hidden');return}let finish=()=>{sessionStorage.setItem('shazo_intro','1');$('#intro').style.opacity='0';setTimeout(()=>{$('#intro').remove();$('#app').classList.remove('hidden')},500)};$('#skipIntro').onclick=finish;$('#capsule').onclick=()=>{let c=$('#capsule');if(c.classList.contains('charging'))return;c.classList.add('charging');$('#introText').textContent='جاري تشغيل شازو...';setTimeout(()=>c.classList.add('split'),700);setTimeout(()=>$('#intro').classList.add('done'),1450);setTimeout(finish,2650)}}
-load();render();intro();
+/**
+ * shazo — App rendering logic
+ * ----------------------------
+ * Pure vanilla JS. Reads SYSTEMS + SYSTEM_ORDER from data.js and renders:
+ *   1. The sidebar (systems + their topics)
+ *   2. The content pane (selected topic's teaching points + references)
+ *
+ * No build step required — just include data.js before app.js in index.html.
+ */
+
+(function () {
+  const state = {
+    activeSystem: SYSTEM_ORDER[0] || null,
+    activeTopic: null,
+  };
+
+  const sidebarEl = document.getElementById("sidebar");
+  const contentEl = document.getElementById("content");
+
+  function init() {
+    // Default to the first topic of the first system, if one exists.
+    const firstSystem = SYSTEMS[state.activeSystem];
+    if (firstSystem && firstSystem.topics.length > 0) {
+      state.activeTopic = firstSystem.topics[0].id;
+    }
+    renderSidebar();
+    renderContent();
+  }
+
+  function selectSystem(systemKey) {
+    state.activeSystem = systemKey;
+    const sys = SYSTEMS[systemKey];
+    state.activeTopic = sys && sys.topics.length > 0 ? sys.topics[0].id : null;
+    renderSidebar();
+    renderContent();
+  }
+
+  function selectTopic(systemKey, topicId) {
+    state.activeSystem = systemKey;
+    state.activeTopic = topicId;
+    renderSidebar();
+    renderContent();
+  }
+
+  function renderSidebar() {
+    const list = document.createElement("ul");
+    list.className = "system-list";
+
+    SYSTEM_ORDER.forEach((key) => {
+      const system = SYSTEMS[key];
+      if (!system) return;
+
+      const item = document.createElement("li");
+      item.className = "system-item";
+
+      const button = document.createElement("button");
+      button.className =
+        "system-button" + (state.activeSystem === key ? " active" : "");
+      button.setAttribute("aria-expanded", state.activeSystem === key);
+      button.innerHTML = `<span>${system.name}</span><span class="tag">${system.icon}</span>`;
+      button.addEventListener("click", () => selectSystem(key));
+      item.appendChild(button);
+
+      if (state.activeSystem === key) {
+        if (system.topics.length === 0) {
+          const note = document.createElement("div");
+          note.className = "empty-note";
+          note.textContent = "لا توجد مواضيع مضافة بعد";
+          item.appendChild(note);
+        } else {
+          const subList = document.createElement("ul");
+          subList.className = "topic-sublist";
+          system.topics.forEach((topic) => {
+            const topicItem = document.createElement("li");
+            const topicButton = document.createElement("button");
+            topicButton.textContent = topic.title;
+            topicButton.className =
+              state.activeTopic === topic.id ? "active" : "";
+            topicButton.addEventListener("click", () =>
+              selectTopic(key, topic.id)
+            );
+            topicItem.appendChild(topicButton);
+            subList.appendChild(topicItem);
+          });
+          item.appendChild(subList);
+        }
+      }
+
+      list.appendChild(item);
+    });
+
+    sidebarEl.innerHTML = "";
+    const brand = document.createElement("div");
+    brand.innerHTML = `
+      <div class="brand">shazo</div>
+      <div class="brand-tag">Pharmacology Reference</div>
+    `;
+    sidebarEl.appendChild(brand);
+    sidebarEl.appendChild(list);
+  }
+
+  function renderContent() {
+    const system = SYSTEMS[state.activeSystem];
+    const topic =
+      system && system.topics.find((t) => t.id === state.activeTopic);
+
+    if (!topic) {
+      contentEl.innerHTML = `
+        <div class="welcome">
+          <h1>مرحبًا بك في shazo</h1>
+          <p>اختر نظامًا من القائمة الجانبية، ثم اختر أحد المواضيع لعرض محتواه.</p>
+        </div>
+      `;
+      return;
+    }
+
+    const pointsHtml = topic.points
+      .map(
+        (point) => `
+        <li class="point">
+          <p>
+            ${escapeHtml(point.text)}
+            ${point.refs
+              .map((r) => `<sup class="ref">(${r})</sup>`)
+              .join("")}
+          </p>
+        </li>
+      `
+      )
+      .join("");
+
+    const referencesHtml = topic.references
+      .map((ref) => `<li>${escapeHtml(ref)}</li>`)
+      .join("");
+
+    contentEl.innerHTML = `
+      <div class="content-header">
+        <p class="eyebrow">${escapeHtml(system.englishName)}</p>
+        <h1>${escapeHtml(topic.title)}</h1>
+        <p class="subtitle">${escapeHtml(topic.subtitle)}</p>
+      </div>
+      <ol class="point-list">
+        ${pointsHtml}
+      </ol>
+      <div class="references">
+        <h2>References</h2>
+        <ol>${referencesHtml}</ol>
+      </div>
+    `;
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  document.addEventListener("DOMContentLoaded", init);
+})();
